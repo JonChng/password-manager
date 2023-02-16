@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 import random
 import pyperclip
+import json
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 # Password Generator Project
 def gen_password():
@@ -30,19 +31,52 @@ def save_password():
     website = web_entry.get()
     email = email_entry.get()
     password = password_entry.get()
+    new_data = {
+        website:{
+            "email":email,
+            "password":password
+        }
+    }
 
     if len(website) == 0 or len(email) == 0 or len(password) == 0:
         messagebox.showinfo(title='Oops', message="Please don't leave any fields empty!")
 
     else:
-        is_ok = messagebox.askokcancel(title=website, message=f"These are the details entered: \nEmail: {email} \nPassword: {password} \nIs it okay to save?")
+        web_entry.delete(0, END)
+        password_entry.delete(0, END)
 
-        if is_ok:
-            web_entry.delete(0, END)
-            password_entry.delete(0, END)
+        try:
+            with open("data.json", "r") as file:
+                data = json.load(file)
 
-            with open("data.txt", "a") as file:
-                file.write(f"{website} | {email} | {password}")
+        except FileNotFoundError:
+            with open("data.json","w") as file:
+                json.dump(new_data, file, indent=4)
+        else:
+            data.update(new_data)
+
+            with open("data.json","w") as file:
+                json.dump(new_data, file, indent=4)
+
+def find_password():
+    try:
+        with open("data.json", "r") as file:
+            data = json.load(file)
+
+    except FileNotFoundError:
+        messagebox.showinfo(title="Error", message="No Data File Found.")
+
+    else:
+        input = web_entry.get()
+        if input == "":
+            messagebox.showinfo(title="Error", message="No Data File Found.")
+        else:
+            email = data[input]["email"]
+            password = data[input]["password"]
+
+            messagebox.showinfo(title="Data", message=f"{input} \nEmail: {email} \nPassword:{password}")
+
+
 
 # ---------------------------- UI SETUP ------------------------------- #
 
@@ -68,8 +102,8 @@ password_label = Label(text="Password:")
 password_label.grid(column=0, row=3)
 
 # Setting up entries
-web_entry = Entry(width=36)
-web_entry.grid(column=1, row=1, columnspan=2)
+web_entry = Entry(width=21)
+web_entry.grid(column=1, row=1, columnspan=1)
 web_entry.focus()
 
 email_entry = Entry(width=36)
@@ -80,6 +114,9 @@ password_entry = Entry(width=21)
 password_entry.grid(column=1, row=3)
 
 # Setting up buttons
+search_button = Button(text="Search", width=11, command=find_password)
+search_button.grid(column=2, row=1)
+
 generate_password = Button(text="Generate Password", width=11, command=gen_password)
 generate_password.grid(column=2, row=3)
 
